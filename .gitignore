@@ -1,0 +1,6 @@
+/bin/
+/baseline
+/baseline.exe
+/baseline-results*.jsonl
+/bench-results/*.jsonl
+/bench-results/*.log
