@@ -2,5 +2,7 @@
 /baseline
 /baseline.exe
 /baseline-results*.jsonl
+/hyperscan-results*.jsonl
+/hyperscan-results*.jsonl.patterns.json
 /bench-results/*.jsonl
 /bench-results/*.log

@@ -3,7 +3,9 @@ package bench
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"runtime"
 	"sort"
@@ -75,7 +77,7 @@ func resolve(ids []int, catalog map[int]signatures.Signature, chosen map[string]
 	return services, nil
 }
 
-func Run(records []corpus.Record, sigs []signatures.Signature, workers int, factory Factory) ([]Result, Stats, error) {
+func Run(records []corpus.Record, sigs []signatures.Signature, workers int, factory Factory) (results []Result, stats Stats, err error) {
 	if workers < 1 {
 		return nil, Stats{}, fmt.Errorf("workers must be positive")
 	}
@@ -87,17 +89,27 @@ func Run(records []corpus.Record, sigs []signatures.Signature, workers int, fact
 		catalog[s.ID] = s
 	}
 	instances := make([]Worker, workers)
+	defer func() {
+		for _, worker := range instances {
+			if closer, ok := worker.(io.Closer); ok {
+				err = errors.Join(err, closer.Close())
+			}
+		}
+	}()
 	for i := range instances {
 		w, err := factory()
+		instances[i] = w
 		if err != nil {
 			return nil, Stats{}, err
 		}
-		instances[i] = w
+		if w == nil {
+			return nil, Stats{}, fmt.Errorf("factory returned nil worker")
+		}
 	}
 	previous := runtime.GOMAXPROCS(workers)
 	defer runtime.GOMAXPROCS(previous)
-	results := make([]Result, len(records))
-	stats := Stats{Requests: len(records), Workers: workers, GOMAXPROCS: runtime.GOMAXPROCS(0)}
+	results = make([]Result, len(records))
+	stats = Stats{Requests: len(records), Workers: workers, GOMAXPROCS: runtime.GOMAXPROCS(0)}
 	for _, r := range records {
 		stats.Bytes += int64(len(r.Data))
 	}

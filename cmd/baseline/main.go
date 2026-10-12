@@ -9,6 +9,7 @@ import (
 
 	"github.com/andreyfesunov/waap_regex_bench/internal/bench"
 	"github.com/andreyfesunov/waap_regex_bench/internal/corpus"
+	"github.com/andreyfesunov/waap_regex_bench/internal/signatures"
 )
 
 func run() error {
@@ -18,16 +19,28 @@ func run() error {
 	}
 
 	start := time.Now()
-	sigs, err := getSignatures(config.Dataset)
+	sigs, hash, err := getSignatures(config.Dataset)
 	if err != nil {
 		return err
 	}
 
+	total := len(sigs)
+	if config.PatternIDs != "" {
+		sigs, err = signatures.SelectManifest(config.PatternIDs, hash, sigs)
+		if err != nil {
+			return err
+		}
+	}
+	compileStart := time.Now()
 	engine, accepted, rejected, err := getBaselineEngine(sigs)
 	if err != nil {
 		return err
 	}
 
+	compileSeconds := time.Since(compileStart).Seconds()
+	if config.PatternIDs != "" && len(rejected) > 0 {
+		return fmt.Errorf("manifest includes %d patterns incompatible with Go; refusing to change selection", len(rejected))
+	}
 	records, err := corpus.Load(config.Dataset, config.Limit)
 	if err != nil {
 		return err
@@ -59,7 +72,12 @@ func run() error {
 		GOOS             string  `json:"goos"`
 		GOARCH           string  `json:"goarch"`
 		Output           string  `json:"output"`
-	}{stats, prepareSeconds, time.Since(writeStart).Seconds(), time.Since(start).Seconds(), len(sigs), len(accepted), len(rejected), runtime.Version(), runtime.GOOS, runtime.GOARCH, config.Output}
+		Engine           string  `json:"engine"`
+		PatternsExcluded int     `json:"patterns_excluded"`
+		CompileSeconds   float64 `json:"compile_seconds"`
+		SourceSHA256     string  `json:"source_sha256"`
+		PatternManifest  string  `json:"pattern_manifest,omitempty"`
+	}{stats, prepareSeconds, time.Since(writeStart).Seconds(), time.Since(start).Seconds(), total, len(accepted), len(rejected), runtime.Version(), runtime.GOOS, runtime.GOARCH, config.Output, "go-regexp", total - len(sigs), compileSeconds, hash, config.PatternIDs}
 
 	return json.NewEncoder(os.Stdout).Encode(summary)
 }

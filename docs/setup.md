@@ -3,7 +3,8 @@
 ## Системные требования
 
 - go 1.25+
-- justfile
+- justfile + pwsh (optional)
+- docker
 
 ## Перед запуском
 
@@ -38,3 +39,24 @@ just baseline 4 100000
 just baseline 12 100000
 just baseline 24 100000
 ```
+
+Более подробно о бенче в [соответствующем документе](./benchmark.md).
+
+### Hyperscan
+
+```sh
+just docker-build
+just docker-test
+just hyperscan 1 100000 common
+just baseline-docker 1 100000 common
+```
+
+2 режима работы - common и all, common - берём те регулярки, которые компилируется в Go + работают в Hyperscan, all - берём те, что работают в Hyperscan.
+
+Полный проход со всеми совместимыми Hyperscan паттернами:
+
+```sh
+just hyperscan 12 0 all
+```
+
+Более подробно о бенче в [соответствующем документе](./benchmark.md).

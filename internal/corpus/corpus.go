@@ -23,7 +23,17 @@ type Record struct {
 }
 
 func Normalize(r Request) []byte {
-	b := []byte(r.Method + " " + r.URL + "\r\n")
+	// Reserve exactly the normalized size so the full corpus does not retain
+	// spare capacity from repeated append growth for every request.
+	size := len(r.Method) + 1 + len(r.URL) + 2 + 2 + len(r.Data)
+	for k, v := range r.Headers {
+		size += len(k) + 2 + len(v) + 2
+	}
+	b := make([]byte, 0, size)
+	b = append(b, r.Method...)
+	b = append(b, ' ')
+	b = append(b, r.URL...)
+	b = append(b, '\r', '\n')
 	keys := make([]string, 0, len(r.Headers))
 	for k := range r.Headers {
 		keys = append(keys, k)

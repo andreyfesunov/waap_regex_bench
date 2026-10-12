@@ -6,10 +6,11 @@ import (
 )
 
 type BaselineConfig struct {
-	Dataset string
-	Workers int
-	Limit   int
-	Output  string
+	Dataset    string
+	Workers    int
+	Limit      int
+	Output     string
+	PatternIDs string
 }
 
 func getConfig() (BaselineConfig, error) {
@@ -18,6 +19,7 @@ func getConfig() (BaselineConfig, error) {
 	flag.IntVar(&config.Workers, "workers", 1, "number of workers and GOMAXPROCS")
 	flag.IntVar(&config.Limit, "limit", 100000, "request limit; 0 loads the full corpus")
 	flag.StringVar(&config.Output, "output", "baseline-results.jsonl", "results JSONL (overwritten)")
+	flag.StringVar(&config.PatternIDs, "pattern-ids", "", "Hyperscan pattern manifest for identical pattern selection")
 	flag.Parse()
 	if flag.NArg() != 0 {
 		return config, fmt.Errorf("positional arguments are not supported")
