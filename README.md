@@ -17,3 +17,5 @@
 - [docs/setup.md](./docs/setup.md) - как запустить проект и бенчмарки.
 - [docs/dev.md](./docs/dev.md) - какие подходы использовались при разработке.
 - [docs/benchmark.md](./docs/benchmark.md) - результаты работы.
+- [docs/hyperscan.md](./docs/hyperscan.md) - как и почему работает система.
+- [docs/limitations.md](./docs/limitations.md) - ограничения системы при масштабировании.
