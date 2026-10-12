@@ -1,0 +1,7 @@
+*
+!.gitignore
+!nmap-service-probes
+!legitimate/
+!malicious/
+!legitimate/.gitkeep
+!malicious/.gitkeep
